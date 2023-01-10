@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.parallel
-
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 ##
 def weights_init(mod):
     """
@@ -170,11 +170,11 @@ class Generator(nn.Module):
         with torch.autograd.set_detect_anomaly(True):
             batch_size = z.size(0)
             
-            z = z.view([batch_size, -1])
+            z = z.view([batch_size, -1]).to(device)
             z = self.pre_z(z)
-            z = z.view([batch_size, -1, 2, 2])
+            z = z.view([batch_size, -1, 2, 2]).to(device)
             c = self.pre_c(c)
-            c = c.view([batch_size, -1, 2, 2])
+            c = c.view([batch_size, -1, 2, 2]).to(device)
             
             zc = torch.cat([z,c], dim=1)
 
@@ -223,21 +223,21 @@ class Discriminator(nn.Module):
             batch_size = x.size(0)
             
             x = self.pre_x(x)
-            z = z.view(batch_size, -1)
+            z = z.view(batch_size, -1).to(device)
 
             z = self.pre_z(z)
             
             
             
-            z = z.view([batch_size, -1, 2, 2])
+            z = z.view([batch_size, -1, 2, 2]).to(device)
             c = self.pre_c(c)
-            c = c.view([batch_size, -1, 2, 2])
+            c = c.view([batch_size, -1, 2, 2]).to(device)
             
             zc = torch.cat([z,c], dim=1)
             xzc = torch.cat([x,zc], dim=1)
             
             # 2x2x200
-            xzc = xzc.view(batch_size, -1)
+            xzc = xzc.view(batch_size, -1).to(device)
             
             result = self.layers(xzc)
             

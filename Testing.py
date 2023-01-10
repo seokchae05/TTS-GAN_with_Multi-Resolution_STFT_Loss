@@ -19,14 +19,17 @@ from Net import Encoder, Generator, Discriminator, D_loss, EG_loss, initialize_w
 
 from tqdm import tqdm
 
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 if __name__ == '__main__':
     n_epochs = 500
     l_rate = 2e-5
 
     print('Model Creating...')
-    E = Encoder(isize=512, nz=512, nc=4, ndf=64, ngpu=0)
-    G = Generator(n_cls=2, isize=512, nz=512, nc=4, ngf=64, ngpu=0)
-    D = Discriminator(n_cls=2, isize=512, nz=512, nc=4, ngf=64, ngpu=0)
+    E = Encoder(isize=512, nz=512, nc=4, ndf=64, ngpu=0).to(device)
+    G = Generator(n_cls=8, isize=512, nz=512, nc=4, ngf=64, ngpu=0).to(device)
+    D = Discriminator(n_cls=8, isize=512, nz=512, nc=4, ngf=64, ngpu=0).to(device)
 
     E.apply(initialize_weights)
     G.apply(initialize_weights)
@@ -49,7 +52,7 @@ if __name__ == '__main__':
 
 
     print('Start learning...')
-    device = 'cpu'
+    
     for epoch in range(n_epochs):
         D_loss_acc = 0.
         EG_loss_acc = 0.
@@ -64,6 +67,7 @@ if __name__ == '__main__':
             rand_z = 2 * torch.rand(images.size(0), 512, 2, 2) - 1
             rand_z = rand_z.to(device)
             
+            c = c.to(device)
             #compute G(z, c) and E(X)
             
             Gz = G(rand_z, c)

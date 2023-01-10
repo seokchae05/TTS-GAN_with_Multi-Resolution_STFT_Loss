@@ -13,7 +13,7 @@ import os
 import torch.nn.functional as F
 
 class vibrationData(Dataset):
-    def __init__(self, root_path, transform=None, n_cls=2):
+    def __init__(self, root_path, transform=None, n_cls=8):
         self.transform = transform
         self.class_list = os.listdir(os.path.join(root_path, 'converted'))
         self.dataset = []
