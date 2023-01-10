@@ -96,5 +96,5 @@ class vibrationData(Dataset):
         if self.transform:
             wavlet_img = self.transform(wavlet_img)
             corr_img = self.transform(corr_img)
-        
+
         return signal, wavlet_img, corr_img, cls_onehot[cls]
