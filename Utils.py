@@ -32,12 +32,12 @@ class vibrationData(Dataset):
                 lines = f.readlines()
                 x = []
                 for line in lines:
-                    x.append(line.strip())
+                    x.append(float(line.strip()))
             with open(y_txt, 'r') as f:
                 lines = f.readlines()
                 y = []
                 for line in lines:
-                    y.append(line.strip())
+                    y.append(float(line.strip()))
 
 
             #2. img data load
