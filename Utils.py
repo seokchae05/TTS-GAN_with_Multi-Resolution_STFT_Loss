@@ -13,11 +13,10 @@ import os
 import torch.nn.functional as F
 
 class vibrationData(Dataset):
-    def __init__(self, root_path, transform=None, n_cls=8):
-        self.transform = transform
-        self.class_list = os.listdir(os.path.join(root_path, 'converted'))
+    def __init__(self, root_path, cls_name= '7'):
+        self.cls_name = cls_name
+        self.class_list = os.listdir(os.path.join(root_path, 'signal'))
         self.dataset = []
-        self.n_cls = n_cls
         for folder in self.class_list:
             if folder =='.DS_Store':
                 continue
@@ -25,8 +24,8 @@ class vibrationData(Dataset):
             x = []
             y = []
 
-            x_txt = os.path.join(root_path, 'signal', folder, 'x_data.txt')
-            y_txt = os.path.join(root_path, 'signal', folder, 'y_data.txt')
+            x_txt = os.path.join(root_path, 'signal', cls_name, 'x_data.txt')
+            y_txt = os.path.join(root_path, 'signal', cls_name, 'y_data.txt')
 
             with open(x_txt, 'r') as f:
                 lines = f.readlines()
@@ -39,36 +38,15 @@ class vibrationData(Dataset):
                 for line in lines:
                     y.append(float(line.strip()))
 
-
-            #2. img data load
-            wavlet_imgs = []
-            corr_imgs = []
-
-            img_dir = os.path.join(root_path, 'converted', folder)
-            imgs = os.listdir(img_dir)
-
             dataset = []
             for idx in range(0, 5121024, 1024):
-                
-                wavlet = os.path.join(img_dir, f'wavelet_{idx+1024}.png')
-                corr = os.path.join(img_dir, f'correlation_{idx+1024}.png')
-                
-                if not os.path.isfile(wavlet):
-                    print(f'No such file {wavlet}')
-                    exit()
-                if not os.path.isfile(corr):
-                    print(f'No such file {corr}')
-                    exit()
                 
                 x_sample = x[idx:idx+1024]
                 y_sample = y[idx:idx+1024]
                 
                 data ={
                     'x' : x_sample,
-                    'y' : y_sample,
-                    'wavlet' : wavlet,
-                    'corr' : corr,
-                    'cls' : folder
+                    'y' : y_sample
                 }
                 
                 dataset.append(data)
@@ -83,18 +61,8 @@ class vibrationData(Dataset):
         
         x = data['x']
         y = data['y']
-        cls = int(data['cls'])
-        wavlet = data['wavlet']
-        corr = data['corr']
         
-        signal = [x, y]
+        signal = [[x], [y]]
         signal = torch.tensor(signal, dtype=float)
-        cls_onehot = torch.eye(self.n_cls)
-        
-        wavlet_img = Image.open(wavlet)
-        corr_img = Image.open(corr)
-        if self.transform:
-            wavlet_img = self.transform(wavlet_img)
-            corr_img = self.transform(corr_img)
 
-        return signal, wavlet_img, corr_img, cls_onehot[cls]
+        return signal, self.cls_name
