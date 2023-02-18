@@ -206,4 +206,3 @@ class Discriminator(nn.Sequential):
             Dis_TransformerEncoder(depth, emb_size=emb_size, drop_p=0.5, forward_drop_p=0.5, **kwargs),
             ClassificationHead(emb_size, n_classes)
         )
-        

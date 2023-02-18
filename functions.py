@@ -16,7 +16,7 @@ from imageio import imsave
 from utils.utils import make_grid, save_image
 from tqdm import tqdm
 import cv2
-
+from stft_loss import MultiResolutionSTFTLoss
 # from utils.fid_score import calculate_fid_given_paths
 from utils.torch_fid_score import get_fid
 # from utils.inception_score import get_inception_scorepython exps/dist1_new_church256.py --node 0022 --rank 0sample
@@ -325,6 +325,22 @@ def train(args, gen_net: nn.Module, dis_net: nn.Module, gen_optimizer, dis_optim
                     g_loss = -torch.mean(fake_validity) + loss_lz
                 else:
                     g_loss = -torch.mean(fake_validity)
+                    
+                    
+                    
+                # cal STFT Loss
+                
+                loss_stft = MultiResolutionSTFTLoss(
+                    x=fake_imgs,
+                    y=real_imgs,
+                    stft_sizes=[256, 512, 1024],
+                    hop_sizes=[10, 10, 10],
+                    win_lengths=[10,20,41]
+                )
+                
+                
+                g_loss = g_loss*0.4 + loss_stft*0.6
+                    
                 g_loss = g_loss/float(args.g_accumulated_times)
                 g_loss.backward()
             
