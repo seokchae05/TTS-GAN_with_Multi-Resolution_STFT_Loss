@@ -5,7 +5,7 @@ from __future__ import print_function
 import cfg
 # import models_search
 # import datasets
-from dataLoader import *
+# from dataLoader import *
 from GANModels import * 
 from functions import train, train_d, validate, save_samples, LinearLrDecay, load_params, copy_params, cur_stages
 from utils.utils import set_log_dir, save_checkpoint, create_logger

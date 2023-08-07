@@ -1,0 +1,10 @@
+## ignore files ##
+
+/data
+/logs
+
+STFT_Testing.ipynb
+
+
+
+

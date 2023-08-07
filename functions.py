@@ -333,13 +333,13 @@ def train(args, gen_net: nn.Module, dis_net: nn.Module, gen_optimizer, dis_optim
                 loss_stft = MultiResolutionSTFTLoss(
                     x=fake_imgs,
                     y=real_imgs,
-                    stft_sizes=[256, 512, 1024],
+                    fft_sizes=[256, 512, 1024],            ###########stft size -> fft size
                     hop_sizes=[10, 10, 10],
                     win_lengths=[10,20,41]
                 )
-                
-                
-                g_loss = g_loss*0.4 + loss_stft*0.6
+                loss_stft_sc = loss_stft[0].item()  # sc loss , mag loss convert to float
+                loss_stft_mg = loss_stft[1].item()
+                g_loss = g_loss*0.4 + loss_stft_sc*0.3 + loss_stft_mg*0.3  #weighted sum of sc loss and mag loss
                     
                 g_loss = g_loss/float(args.g_accumulated_times)
                 g_loss.backward()

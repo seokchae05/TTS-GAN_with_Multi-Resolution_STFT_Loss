@@ -27,9 +27,11 @@ def stft(x, fft_size, hop_size, win_length, window):
         x_stft = torch.stft(x, fft_size, hop_size, win_length, window)
     real = x_stft[..., 0]
     imag = x_stft[..., 1]
+    #print(real.shape, imag.shape)
 
     # NOTE(kan-bayashi): clamp is needed to avoid nan or inf
-    return torch.sqrt(torch.clamp(real**2 + imag**2, min=1e-7)).transpose(2, 1)
+    #real과 imag 텐서의 형태가 (num_frequencies, num_frames)이면, 전치는 필요하지 않음
+    return torch.sqrt(torch.clamp(real**2 + imag**2, min=1e-7))  # .transpose(1, 2)
 
 
 # class SpectralConvergenceLoss(torch.nn.Module):
@@ -106,10 +108,24 @@ def Loss_mag(x_mag, y_mag):
 #         return sc_loss, mag_loss
 
 def STFTLoss(x,y, fft_size=1024, shift_size=120, win_length=600, window="hann_window"):
-    x_mag = stft(x, fft_size, shift_size, win_length, window)
-    y_mag = stft(y, fft_size, shift_size, win_length, window)
-    sc_loss = Loss_SC(x_mag, y_mag)
-    mag_loss = Loss_mag(x_mag, y_mag)
+    # print("x.shape", x.shape , type(x))
+    # print("y.shape", y.shape, type(y))
+    device = x.device
+    window_tensor = getattr(torch, window)(win_length).to(device)
+    sc_loss = 0
+    mag_loss = 0
+    
+    for batch_idx in range(x.size(0)):
+        for channel_idx in range(x.size(1)):
+            x_batch = x[batch_idx, channel_idx, 0, :]
+            y_batch = y[batch_idx, channel_idx, 0, :]
+            x_mag = stft(x_batch, fft_size, shift_size, win_length, window_tensor)
+            y_mag = stft(y_batch, fft_size, shift_size, win_length, window_tensor)
+            sc_loss += Loss_SC(x_mag, y_mag)
+            mag_loss += Loss_mag(x_mag, y_mag)
+    
+    sc_loss /= (x.size(0) * x.size(1))
+    mag_loss /= (x.size(0) * x.size(1))
 
     return sc_loss, mag_loss
 
@@ -168,14 +184,15 @@ def MultiResolutionSTFTLoss(
     window="hann_window"
     ):
     
+    stft_losses = [] #########UnboundLocalError: local variable 'stft_losses' referenced before assignment 떠서 선언해줌
     for fs, ss, wl in zip(fft_sizes, hop_sizes, win_lengths):
-            stft_losses += [STFTLoss(fs, ss, wl, window)]
-    
+            stft_loss_result = STFTLoss(x,y,fs, ss, wl, window)
+            stft_losses.append(stft_loss_result)
     sc_loss = 0.0
     mag_loss = 0.0
     
     for f in stft_losses:
-        sc_l, mag_l = f(x, y)
+        sc_l, mag_l = f[0],f[1]
         sc_loss += sc_l
         mag_loss += mag_l
     sc_loss /= len(stft_losses)
